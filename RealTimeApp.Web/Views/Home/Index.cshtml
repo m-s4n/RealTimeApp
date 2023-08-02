@@ -1,0 +1,118 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+@section Scripts
+{
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready( () => 
+        {
+            //önce client hub'a bağlanmalıdır
+            var connection = new signalR.HubConnectionBuilder()
+            .configureLogging(signalR.LogLevel.Debug) // loglama
+            .withAutomaticReconnect([1000,1000,2000,3000]) // tekrar bağlantı kurulumu
+            .withUrl("http://localhost:4020/myhub").build();
+
+
+            connection.onreconnecting(err => 
+            {
+                console.log("tekrar bağlanılmaya çalışılıyor");
+            });
+
+            // client, server ile her bir bağlantı kurduğunda connection id alır
+            // bu connection id üzerinden hangi event bağlantı kurduğunu anlarım
+            // session id gibi düşünebilirz
+
+            connection.onreconnected( connectionId => {
+                console.log("bağlantı tekrar sağlandı");
+                connection.invoke("GetNames");
+            });
+
+            connection.onclose(_ => {
+                console.log("bağlantı kapandı");
+            })
+            
+
+            connection.start()
+                .then(_ => {
+                    $("#conStatus").text(connection.q);
+                    connection.invoke("GetNames");
+                })
+                .catch(err => {
+                    console.log(err);
+                });
+
+            $("#btnNameSave").click(() => {
+                console.log("butona tıklandı");
+                //butona tıklayınca server tarafınaki metodu çağıracağız
+                //invoke server tarafındaki metotları çağırmamıza yarayan metot
+                // çağıracağımız metot ismi ve parametre verilir
+                connection.invoke("SendName", $("#txtName").val())
+                    .then(_ => {
+                        console.log("mesaj gönderildi");
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    });
+            });
+
+            // server tarafındaki metotlara subscribe olabilmem için
+            // on ile bir metoda abone olabiliriz
+            // aslında server tarafındaki event'a abone oluyoruz
+            // event gönderildiğinde bildirim gönderildiğinde tetikleniyor
+            connection.on("ReceiveName", name => {
+                $("#nameList").append(`<li class="list-item" > ${name} </li>`);
+            });
+
+            // client sayılarını alınır
+            connection.on("ReceiveClientCount", (clientCount) => 
+            {
+                $("#clientCount").text(clientCount);
+            });
+
+            // Takım sayısı bilgisi
+            connection.on("Notify", countText => {
+                $("#notify").html(`<div class="alert alert-success" > ${countText} </div>`);
+            });
+
+            // error event'i yakalanır
+            connection.on("AddedError", errNotification => 
+            {
+                $("#error").text(errNotification);
+            });
+
+            // liste alınır
+            connection.on("ReceiveNames", liste => {
+                $("#nameList").empty();
+                liste.forEach(item => {
+                    $("#nameList").append(`<li class="list-item" > ${item} </li>`);
+                }); 
+            });
+        });
+
+    </script>
+}
+
+<div  class="row">
+    <div class="col-md-8 offset-2">
+        <input  class="form-control" type="text" id="txtName" />
+        <hr />
+        <button class="btn btn-primary" id="btnNameSave">İsim Kaydet</button>
+        <div class="alert alert-info" >
+            Bağlantı Durumu: <strong id="conStatus" ></strong>
+            Client Sayısı: <strong id="clientCount"></strong>
+        </div>
+    </div>
+    <div id="notify">
+        
+    </div>
+
+    <div id="error" class="alert alert-danger">
+
+    </div>
+    <div class="col-md-8 offset-2" >
+        <ul class="list-group" id="nameList" ></ul>
+    </div>
+</div>
+

@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33815.320
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RealTimeApp.API", "RealTimeApp.API\RealTimeApp.API.csproj", "{2C7815F3-7656-45F8-8627-ADFCD5590AAF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RealTimeApp.Web", "RealTimeApp.Web\RealTimeApp.Web.csproj", "{8804ABFA-8165-44E8-9F46-13A6875FA005}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2C7815F3-7656-45F8-8627-ADFCD5590AAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C7815F3-7656-45F8-8627-ADFCD5590AAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C7815F3-7656-45F8-8627-ADFCD5590AAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C7815F3-7656-45F8-8627-ADFCD5590AAF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8804ABFA-8165-44E8-9F46-13A6875FA005}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8804ABFA-8165-44E8-9F46-13A6875FA005}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8804ABFA-8165-44E8-9F46-13A6875FA005}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8804ABFA-8165-44E8-9F46-13A6875FA005}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6844523E-B0EA-47E0-B713-0266F75015D8}
+	EndGlobalSection
+EndGlobal
