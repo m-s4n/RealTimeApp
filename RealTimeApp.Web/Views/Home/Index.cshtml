@@ -38,6 +38,7 @@
                 .then(_ => {
                     $("#conStatus").text(connection.q);
                     connection.invoke("GetNames");
+                    connection.invoke("GetNamesByGroup");
                 })
                 .catch(err => {
                     console.log(err);
@@ -89,6 +90,68 @@
                     $("#nameList").append(`<li class="list-item" > ${item} </li>`);
                 }); 
             });
+
+            // Takım group işlemleri
+            $("#btnNameTeam").click(() => {
+                let name = $("#txtName").val();
+                let teamName = $("input[type=radio]:checked").val();
+                if(name == null || teamName == null)
+                {
+                    alert("bilgiler boş geçilemez");
+                    return;
+                }
+
+                connection.invoke("SendNameByGroup", name, teamName);
+            });
+
+            // subscribe team işlemleri
+            connection.on("ReceiveMessageByGroup", (name, teamName) => 
+            {
+                $(`#${teamName}List`).append(`<li class="list-item" > ${name} </li>`);
+            });
+
+            // gruba abone olmayı radio buttondan yakalayalım
+            $("input[type=radio]").change(() => {
+                let value = $(`input[type=radio]:checked`).val();
+                
+                if(value === "ATeam")
+                {
+                    connection.invoke("AddToGroup", "ATeam");
+                    connection.invoke("RemoveToGroup", "BTeam");
+                }
+                else
+                {
+                    connection.invoke("AddToGroup", "BTeam");
+                    connection.invoke("RemoveToGroup", "ATeam");
+                }
+            });
+
+            // bağlantı kurulduğunda tüm takımlar alınır
+            connection.on("ReceiveNamesByGroup", teams => {
+                teams.forEach(team => {
+                    team.users.forEach(user => {
+                        $(`#${team.teamName}List`).append(`<li class="list-item" > ${user.name} </li>`);
+                    })
+                });
+            });
+
+            // ürün gönder
+            $("#btnProductSave").click(() => {
+                let product = 
+                {
+                    "Id":1, 
+                    "Name": "Kalem", 
+                    "Price":100, 
+                    "Stock":200
+                };
+
+                connection.invoke("SendProduct", product);
+            });
+
+            // ürün al (subscribe)
+            connection.on("ReceiveProduct", product => {
+                console.log(product);
+            })
         });
 
     </script>
@@ -99,6 +162,7 @@
         <input  class="form-control" type="text" id="txtName" />
         <hr />
         <button class="btn btn-primary" id="btnNameSave">İsim Kaydet</button>
+        <button class="btn btn-danger" id="btnProductSave">Ürün Kaydet</button>
         <div class="alert alert-info" >
             Bağlantı Durumu: <strong id="conStatus" ></strong>
             Client Sayısı: <strong id="clientCount"></strong>
@@ -113,6 +177,36 @@
     </div>
     <div class="col-md-8 offset-2" >
         <ul class="list-group" id="nameList" ></ul>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 offset-2">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="teamGroup" value="ATeam" />
+            <label class="form-check-label" >A Takımı</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="teamGroup" value="BTeam" />
+            <label class="form-check-label">B Takımı</label>
+        </div>
+    </div>
+
+</div>
+
+<div class="row">
+    <div class="col-md-6" >
+        <ul class="list-group" id="ATeamList"></ul>
+    </div>
+
+    <div class="col-md-6" >
+        <ul class="list-group" id="BTeamList"></ul>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 offset-2">
+        <button class="btn btn-primary" id="btnNameTeam" >İsim Kaydet (Takım)</button>
     </div>
 </div>
 

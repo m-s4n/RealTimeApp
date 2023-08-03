@@ -1,11 +1,17 @@
 using RealTimeApp.API.SignalR.Hubs;
-
+using Microsoft.EntityFrameworkCore;
+using RealTimeApp.API.Database;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
+// db
+builder.Services.AddDbContext<AppDbContext>(option =>
+{
+    option.UseNpgsql(builder.Configuration.GetConnectionString("RealTimeDB"));
+});
 // SignalR servis olarak eklenir
 builder.Services.AddSignalR();
 //builder.Services.AddEndpointsApiExplorer();

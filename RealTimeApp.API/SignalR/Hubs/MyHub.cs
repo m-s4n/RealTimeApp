@@ -1,10 +1,19 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using RealTimeApp.API.Database;
+using RealTimeApp.API.Entities;
+using RealTimeApp.API.Models;
 
 namespace RealTimeApp.API.SignalR.Hubs
 {
     // hub içerisinde client'ların cagıracağı metotlar tanımlanır
     public class MyHub:Hub
     {
+        private readonly AppDbContext _dbContext;
+        public MyHub(AppDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
         public static List<string> Names = new List<string>();
         // client'lar hub içerisindeki metotlara erişecek
         static int ClientCount { get; set; } = 0; 
@@ -56,6 +65,68 @@ namespace RealTimeApp.API.SignalR.Hubs
         {
             ClientCount--;
             await Clients.All.SendAsync(method: "ReceiveClientCount", arg1: ClientCount, arg2: "client_sayisi");
+        }
+
+        // group işlemeleri
+        // bir client'i gruba ekleme işlemi yapalım
+        // client addtogroup işlemine istek attığında gruba üye olacak
+        public async Task AddToGroup(string teamName)
+        {
+            // connectionId her bir client'ı kimliklendiriyor
+            await Groups.AddToGroupAsync(Context.ConnectionId, teamName);
+        }
+
+        // client'ilgili group'dan çıkmak isteyebilir
+        public async Task RemoveToGroup(string teamName)
+        {
+            // kim hangi grup'tan çıkıyor verilir
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, teamName);
+        }
+
+
+        // takımlara isim ekleme işlemleri
+        public async Task SendNameByGroup(string name, string teamName)
+        {
+            var team = await _dbContext.Teams.Where(x => x.Name == teamName).FirstOrDefaultAsync();
+
+            if(team != default)
+            {
+                await _dbContext.Users.AddAsync(new User { Name = name, Team = team });
+            }
+            else
+            {
+                Team newTeam = new() { Name = name };
+                newTeam.Users.Add(new User { Name=name});
+                await _dbContext.Teams.AddAsync(newTeam);
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            // ekleme işlemi yapıldı client'ları bilgilendirelim
+            // hangi gruba ne event yayınlamak istiyoruz
+            // bu team'e üye olanlar mesaj/bildirim alabilir
+            await Clients.Group(teamName).SendAsync("ReceiveMessageByGroup", arg1: name, arg2: teamName);
+
+        }
+
+        // tüm takım iismlerini döndürme
+        public async Task GetNamesByGroup()
+        {
+            // client ilk girdiğinte iki takımında isimlerini görsün
+            var teams = _dbContext
+                .Teams
+                .Include(x => x.Users)
+                .Select(x => new {teamName =x.Name, users=x.Users.ToList()})
+                .ToList();
+
+            await Clients.All.SendAsync("ReceiveNamesByGroup", arg1: teams);
+        }
+
+
+        // Client'tan server'a complex type gönderme
+        public async Task SendProduct(Product product)
+        {
+            await Clients.All.SendAsync("ReceiveProduct", product);
         }
     }
 }
